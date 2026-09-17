@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept 2 — Dual-Action Card | Car Rental Location Picker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    color: #333;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Site header ── */
+  .site-header {
+    background: #003580;
+    padding: 14px 24px 0;
+  }
+  .site-header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .header-links {
+    display: flex;
+    gap: 16px;
+  }
+  .header-links a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 13px;
+  }
+  .header-links a:hover { color: #fff; }
+
+  /* ── Vertical nav tabs ── */
+  .verticals {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 4px;
+    padding-top: 12px;
+  }
+  .vertical-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background .15s;
+    border: 1px solid transparent;
+  }
+  .vertical-tab:hover { background: rgba(255,255,255,0.1); }
+  .vertical-tab.active {
+    border-color: rgba(255,255,255,0.9);
+    color: white;
+    font-weight: 600;
+  }
+
+  /* ── Search bar ── */
+  .search-bar {
+    background: #003580;
+    padding: 12px 24px 18px;
+  }
+  .search-form {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #febb02;
+    border-radius: 4px;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .search-field {
+    background: white;
+    padding: 10px 12px;
+    border-radius: 3px;
+    border: none;
+    flex: 1;
+  }
+  .search-field-label {
+    font-size: 11px;
+    color: #595959;
+    display: block;
+  }
+  .search-field-value {
+    font-size: 13px;
+    font-weight: 500;
+    color: #262626;
+  }
+  .search-btn {
+    background: #0071c2;
+    color: white;
+    border: none;
+    padding: 24px 20px;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .search-btn:hover { background: #00508a; }
+
+  /* ── Prototype badge ── */
+  .proto-badge {
+    position: fixed;
+    top: 8px;
+    right: 12px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    z-index: 200;
+  }
+  .proto-badge a { color: rgba(255,255,255,0.8); text-decoration: none; margin-left: 8px; }
+  .proto-badge a:hover { color: white; }
+
+  /* ── Main layout ── */
+  .page-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px 120px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    align-items: start;
+  }
+  .left-col { min-width: 0; }
+  .right-col { position: relative; }
+
+  /* Legacy single-col fallback for results screen */
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 16px 120px;
+  }
+
+  /* ── Map ── */
+  .map-container {
+    position: sticky;
+    top: 72px;
+    height: calc(100vh - 160px);
+    background: #e8ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+  }
+  .map-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background:
+      linear-gradient(rgba(200,210,220,0.3) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,210,220,0.3) 1px, transparent 1px),
+      #e8ecef;
+    background-size: 40px 40px;
+  }
+  .map-label {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(255,255,255,0.92);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #595959;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .map-pin {
+    position: absolute;
+    background: white;
+    border: 1.5px solid #c6d4e0;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    transition: all .25s;
+    cursor: pointer;
+    transform: translate(-50%, -100%);
+  }
+  .map-pin:hover {
+    border-color: #0071c2;
+    box-shadow: 0 2px 8px rgba(0,113,194,0.25);
+    z-index: 3;
+  }
+  .map-pin::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid white;
+  }
+  .map-pin .pin-price { color: #008009; margin-left: 4px; }
+  .map-pin.selected {
+    background: #003580;
+    color: white;
+    border-color: #003580;
+    box-shadow: 0 2px 8px rgba(0,53,128,0.35);
+    z-index: 2;
+    transform: translate(-50%, -100%) scale(1.1);
+  }
+  .map-pin.selected .pin-price { color: #7dd87d; }
+  .map-pin.selected::after { border-top-color: #003580; }
+
+  .page-title { font-size: 26px; font-weight: 700; margin-bottom: 2px; }
+  .page-subtitle { font-size: 15px; color: #6b6b6b; margin-bottom: 16px; }
+
+  /* ── Hint box ── */
+  .hint-box {
+    background: #e8f4fd;
+    border: 1px solid #b3d9f2;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #003580;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .hint-box .hint-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background: #0071c2;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 1px;
+  }
+
+  /* ── Bulk actions ── */
+  .bulk-actions {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  .bulk-actions a {
+    color: #0071c2;
+    text-decoration: none;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .bulk-actions a:hover { text-decoration: underline; }
+
+  /* ── Sort dropdown ── */
+  .sort-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: #6b6b6b;
+  }
+  .sort-row .sort-label { white-space: nowrap; }
+  .sort-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E") no-repeat right 10px center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 28px 6px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+  }
+  .sort-select:hover { border-color: #0071c2; }
+  .sort-select:focus { outline: none; border-color: #0071c2; box-shadow: 0 0 0 2px rgba(0,113,194,0.15); }
+
+  /* ── Type filter chips ── */
+  .type-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .type-filter {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid #e0e0e0;
+    background: white;
+    color: #555;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .type-filter:hover { border-color: #0071c2; color: #0071c2; }
+  .type-filter.active {
+    background: #003580;
+    color: white;
+    border-color: #003580;
+  }
+
+  /* ── Sections ── */
+  .section { margin-bottom: 24px; }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 0 4px;
+  }
+  .section-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+  }
+  .section-title {
+    font-size: 17px;
+    font-weight: 700;
+    flex: 1;
+  }
+  .section-count {
+    font-size: 13px;
+    color: #6b6b6b;
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  /* ── Category checkbox ── */
+  .category-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #6b6b6b;
+    user-select: none;
+    -webkit-user-select: none;
+    padding: 4px 0;
+  }
+  .category-checkbox-wrap:hover { color: #0071c2; }
+
+  /* ── Shared checkbox style ── */
+  .custom-checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #b0b0b0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all .15s;
+    cursor: pointer;
+    background: #fff;
+  }
+  .custom-checkbox.checked {
+    background: #0071c2;
+    border-color: #0071c2;
+  }
+  .custom-checkbox.checked::after {
+    content: '';
+    width: 6px;
+    height: 11px;
+    border: solid #fff;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg) translateY(-1px);
+  }
+  .custom-checkbox.indeterminate {
+    background: #0071c2;
+    border-color: #0071c2;
+  }
+  .custom-checkbox.indeterminate::after {
+    content: '';
+    width: 10px;
+    height: 0;
+    border-bottom: 2.5px solid #fff;
+  }
+
+  /* ── Location card ── */
+  .location-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    display: flex;
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .location-card:hover {
+    border-color: #0071c2;
+    box-shadow: 0 0 0 1px #0071c2;
+  }
+
+  /* Card body (left area — also toggles selection) */
+  .card-body {
+    flex: 1;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: background .15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
+  .card-body:hover { background: #f7f9fc; }
+  .card-type-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-top: 2px;
+  }
+  .card-type-icon.airport { background: #e8f4fd; }
+  .card-type-icon.station { background: #fef3e6; }
+  .card-type-icon.city { background: #eef7ee; }
+  .card-body-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .card-body-price { flex-shrink: 0; text-align: right; padding-top: 2px; }
+
+  .card-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+  .card-address {
+    font-size: 13px;
+    color: #868686;
+  }
+  .card-meta {
+    font-size: 13px;
+    color: #6b6b6b;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .card-price {
+    font-size: 16px;
+    font-weight: 700;
+    color: #008009;
+    white-space: nowrap;
+  }
+  .card-price-label {
+    font-size: 11px;
+    color: #868686;
+    font-weight: 400;
+  }
+
+  /* Vertical divider */
+  .card-divider {
+    width: 1px;
+    background: #e0e0e0;
+    align-self: stretch;
+  }
+
+  /* Checkbox zone (right side) */
+  .card-checkbox-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 72px;
+    min-width: 72px;
+    cursor: pointer;
+    transition: background .15s;
+    user-select: none;
+    -webkit-user-select: none;
+    background: #fafbfc;
+  }
+  .card-checkbox-zone:hover { background: #f0f0f0; }
+  .card-checkbox-zone:active { background: #e4e4e4; }
+  .card-checkbox-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6b6b6b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .card-checkbox-zone:hover .card-checkbox-label { color: #0071c2; }
+
+  /* Supplier badges */
+  .card-suppliers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 4px;
+  }
+  .supplier-badge {
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 8px;
+    font-weight: 700;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .supplier-badge.hertz { background: #ffd500; color: #000; }
+  .supplier-badge.europcar { background: #00843d; }
+  .supplier-badge.enterprise { background: #004225; }
+  .supplier-badge.avis { background: #d4171e; }
+  .supplier-badge.sixt { background: #ff5f00; }
+  .supplier-badge.budget { background: #e31837; }
+  .supplier-badge.national { background: #00573f; }
+  .supplier-badge.alamo { background: #0072ce; }
+  .supplier-badge.thrifty { background: #003da5; }
+  .supplier-badge.more { background: #e0e0e0; color: #595959; }
+
+  /* Card selected highlight */
+  .location-card.selected {
+    border-color: #0071c2;
+    background: #f7fbff;
+  }
+  .location-card.selected .card-body:hover { background: #eaf3fd; }
+
+  /* ── Sticky footer ── */
+  .sticky-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.1);
+    padding: 12px 20px;
+    z-index: 90;
+    transform: translateY(100%);
+    transition: transform .25s ease;
+  }
+  .sticky-footer.visible {
+    transform: translateY(0);
+  }
+  .footer-inner {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .footer-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .chip {
+    background: #e8f4fd;
+    border: 1px solid #b3d9f2;
+    border-radius: 20px;
+    padding: 4px 12px 4px 12px;
+    font-size: 13px;
+    color: #003580;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .chip-remove {
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: #6b6b6b;
+    font-weight: 500;
+    transition: color .1s;
+    padding: 0 2px;
+  }
+  .chip-remove:hover { color: #c00; }
+
+  .footer-cta {
+    background: #0071c2;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background .15s;
+  }
+  .footer-cta:hover { background: #00508a; }
+  .footer-cta:active { background: #003f6e; }
+
+  /* ── Modal overlay ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px 24px 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,.2);
+    text-align: center;
+  }
+  .modal h2 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  .modal p {
+    font-size: 14px;
+    color: #6b6b6b;
+    margin-bottom: 20px;
+  }
+  .modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .modal-btn-primary {
+    background: #0071c2;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .modal-btn-primary:hover { background: #00508a; }
+  .modal-btn-secondary {
+    background: transparent;
+    color: #0071c2;
+    border: 2px solid #0071c2;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .modal-btn-secondary:hover { background: #f0f7ff; }
+
+  /* ── Results screen ── */
+  .results-screen {
+    display: none;
+  }
+  .results-screen.active {
+    display: block;
+  }
+  .picker-screen.hidden {
+    display: none;
+  }
+  .results-back {
+    color: #0071c2;
+    text-decoration: none;
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .results-back:hover { text-decoration: underline; }
+  .results-card {
+    background: #fff;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .results-car-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+  .results-card h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #333;
+  }
+  .results-card p {
+    font-size: 14px;
+    color: #6b6b6b;
+  }
+  .results-placeholder {
+    margin-top: 20px;
+    background: #f5f5f5;
+    border: 2px dashed #d0d0d0;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    color: #999;
+    font-size: 15px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .page-layout {
+      grid-template-columns: 1fr;
+      padding: 16px 12px 130px;
+    }
+    .right-col { display: none; }
+    .card-name { font-size: 15px; }
+    .page-title { font-size: 22px; }
+    .location-card { border-radius: 10px; }
+    .card-body { padding: 12px 14px; }
+    .card-checkbox-zone { width: 64px; min-width: 64px; }
+    .footer-cta { padding: 14px 20px; }
+    .chip { font-size: 12px; padding: 3px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ PROTOTYPE BADGE ═══════════════ -->
+<div class="proto-badge">Concept A &mdash; Select + Smart Footer <a href="index.html">&larr; All</a></div>
+
+<!-- ═══════════════ SITE HEADER ═══════════════ -->
+<div class="site-header">
+  <div class="site-header-inner">
+    <div class="logo">Booking.com</div>
+    <div class="header-links">
+      <a href="#">GBP</a>
+      <a href="#">Help</a>
+      <a href="#">Sign in</a>
+    </div>
+  </div>
+  <div class="verticals">
+    <a class="vertical-tab" href="#">Stays</a>
+    <a class="vertical-tab" href="#">Flights</a>
+    <a class="vertical-tab" href="#">Flight + Hotel</a>
+    <a class="vertical-tab active" href="#">Car rentals</a>
+    <a class="vertical-tab" href="#">Attractions</a>
+    <a class="vertical-tab" href="#">Airport taxis</a>
+  </div>
+</div>
+
+<!-- ═══════════════ SEARCH BAR ═══════════════ -->
+<div class="search-bar">
+  <div class="search-form">
+    <div class="search-field" style="flex:2;"><span class="search-field-label">Pick-up location</span><span class="search-field-value">London, United Kingdom</span></div>
+    <div class="search-field"><span class="search-field-label">Pick-up date</span><span class="search-field-value">Tue, 15 Jul</span></div>
+    <div class="search-field" style="flex:0.5;"><span class="search-field-label">Time</span><span class="search-field-value">10:00</span></div>
+    <div class="search-field"><span class="search-field-label">Drop-off date</span><span class="search-field-value">Fri, 18 Jul</span></div>
+    <div class="search-field" style="flex:0.5;"><span class="search-field-label">Time</span><span class="search-field-value">10:00</span></div>
+    <button class="search-btn">Search</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PICKER SCREEN ═══════════════ -->
+<div class="page-layout picker-screen" id="pickerScreen">
+  <div class="left-col">
+    <h1 class="page-title">Nearby pick-up locations</h1>
+    <p class="page-subtitle">Filter your results to quickly find your ideal pick-up location</p>
+
+      <div class="type-filters" id="typeFilters">
+      <button class="type-filter active" data-type="all" onclick="setTypeFilter('all')">All locations</button>
+      <button class="type-filter" data-type="airport" onclick="setTypeFilter('airport')">Airports</button>
+      <button class="type-filter" data-type="station" onclick="setTypeFilter('station')">Train Stations</button>
+      <button class="type-filter" data-type="city" onclick="setTypeFilter('city')">City</button>
+    </div>
+
+    <div class="bulk-actions">
+      <a id="selectAllLink" onclick="selectAll()">Select all</a>
+      <a id="clearAllLink" onclick="clearAll()">Clear all</a>
+    </div>
+
+    <div class="sort-row">
+      <span class="sort-label">Sort by:</span>
+      <select class="sort-select" onchange="setSort(this.value)">
+        <option value="distance">Distance</option>
+        <option value="price">Price: low to high</option>
+      </select>
+    </div>
+
+    <!-- Cards rendered by JS -->
+    <div id="sectionsContainer"></div>
+  </div>
+
+  <div class="right-col">
+    <div class="map-container">
+      <div class="map-inner" id="mapInner">
+        <div class="map-label">London area</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ RESULTS SCREEN ═══════════════ -->
+<div class="container results-screen" id="resultsScreen">
+  <a class="results-back" onclick="goBackToPicker()">&#8592; Change location</a>
+  <div class="results-card">
+    <div class="results-car-icon">&#128663;</div>
+    <h2 id="resultsTitle">Showing cars</h2>
+    <p id="resultsSubtitle"></p>
+  </div>
+  <div class="results-placeholder">[Search Results Page loads here]</div>
+</div>
+
+<!-- ═══════════════ STICKY FOOTER ═══════════════ -->
+<div class="sticky-footer" id="stickyFooter">
+  <div class="footer-inner">
+    <div class="footer-chips" id="footerChips"></div>
+    <button class="footer-cta" id="footerCta" onclick="searchMultiple()">Search cars at 0 locations</button>
+  </div>
+</div>
+
+
+<script>
+// ── Data ──
+// ── Flat list sorted by distance ──
+const allLocations = [
+  { id: 'mar', name: 'Marble Arch', type: 'city', address: 'Oxford St, London W1H', dist: '0.8 miles', cars: 95, suppliers: 8, price: '£142', mapX: 40, mapY: 42, badges: ['hertz','avis','enterprise','sixt','+4'] },
+  { id: 'vic', name: 'Victoria Station', type: 'station', address: 'Buckingham Palace Rd, London SW1W', dist: '1.2 miles', cars: 72, suppliers: 6, price: '£118', mapX: 44, mapY: 48, badges: ['enterprise','sixt','europcar','+3'] },
+  { id: 'lvi', name: 'London Victoria', type: 'city', address: 'Wilton Rd, London SW1V', dist: '1.3 miles', cars: 95, suppliers: 8, price: '£129', mapX: 46, mapY: 52, badges: ['hertz','enterprise','avis','sixt','+4'] },
+  { id: 'blo', name: 'Bloomsbury', type: 'city', address: 'Southampton Row, London WC1B', dist: '1.5 miles', cars: 45, suppliers: 4, price: '£135', mapX: 50, mapY: 36, badges: ['europcar','enterprise','alamo','+1'] },
+  { id: 'kgx', name: "King's Cross", type: 'station', address: 'Euston Rd, London N1C', dist: '2.1 miles', cars: 80, suppliers: 7, price: '£125', mapX: 48, mapY: 32, badges: ['hertz','enterprise','avis','budget','+3'] },
+  { id: 'pad', name: 'Paddington', type: 'station', address: 'Praed St, London W2', dist: '2.4 miles', cars: 60, suppliers: 5, price: '£130', mapX: 34, mapY: 38, badges: ['europcar','sixt','national','+2'] },
+  { id: 'ear', name: "Earl's Court", type: 'city', address: "Earl's Court Rd, London SW5", dist: '3.1 miles', cars: 52, suppliers: 5, price: '£119', mapX: 32, mapY: 55, badges: ['hertz','enterprise','sixt','+2'] },
+  { id: 'shb', name: "Shepherd's Bush", type: 'city', address: "Shepherd's Bush Rd, London W6", dist: '4.2 miles', cars: 34, suppliers: 3, price: '£116', mapX: 26, mapY: 52, badges: ['enterprise','europcar','alamo'] },
+  { id: 'lcy', name: 'London City Airport', type: 'airport', address: 'Hartmann Rd, Royal Docks E16', dist: '7 miles', cars: 110, suppliers: 6, price: '£120', mapX: 70, mapY: 50, badges: ['enterprise','avis','sixt','+3'] },
+  { id: 'hea', name: 'Heathrow Airport', type: 'airport', address: 'Terminal area, Hounslow TW6', dist: '15 miles', cars: 326, suppliers: 14, price: '£98', mapX: 18, mapY: 45, badges: ['hertz','avis','enterprise','sixt','thrifty','+9'] },
+  { id: 'gat', name: 'Gatwick Airport', type: 'airport', address: 'North Terminal, Gatwick RH6', dist: '28 miles', cars: 245, suppliers: 11, price: '£89', mapX: 55, mapY: 82, badges: ['hertz','europcar','enterprise','budget','+7'] },
+  { id: 'sta', name: 'Stansted Airport', type: 'airport', address: 'Bassingbourn Rd, Stansted CM24', dist: '36 miles', cars: 180, suppliers: 9, price: '£75', mapX: 72, mapY: 12, badges: ['hertz','europcar','avis','national','+5'] },
+];
+
+// ── State ──
+const selected = new Set();
+let activeTypeFilter = 'all';
+let activeSort = 'distance';
+
+// ── Filter + sort helpers ──
+function getFilteredLocations() {
+  let locs = activeTypeFilter === 'all' ? [...allLocations] : allLocations.filter(l => l.type === activeTypeFilter);
+  if (activeSort === 'price') {
+    locs.sort((a, b) => parseInt(a.price.replace('£','')) - parseInt(b.price.replace('£','')));
+  }
+  return locs;
+}
+
+function setTypeFilter(type) {
+  activeTypeFilter = type;
+  document.querySelectorAll('.type-filter').forEach(btn => btn.classList.toggle('active', btn.dataset.type === type));
+  render();
+}
+
+function setSort(sort) {
+  activeSort = sort;
+  render();
+}
+
+// ── Render flat list ──
+function render() {
+  const container = document.getElementById('sectionsContainer');
+  container.innerHTML = '';
+
+  getFilteredLocations().forEach(loc => {
+    const isSelected = selected.has(loc.id);
+    const card = document.createElement('div');
+    card.className = 'location-card' + (isSelected ? ' selected' : '');
+    card.id = 'card-' + loc.id;
+
+    const badgesHtml = (loc.badges || []).map(b => {
+      if (b.startsWith('+')) return `<span class="supplier-badge more">${b}</span>`;
+      const labels = { hertz:'Hertz', europcar:'Europcar', enterprise:'Enterprise', avis:'AVIS', sixt:'Sixt', budget:'Budget', national:'National', alamo:'Alamo', thrifty:'Thrifty' };
+      return `<span class="supplier-badge ${b}">${labels[b] || b}</span>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="card-body" onclick="onCardBodyClick('${loc.id}')">
+        <div class="card-type-icon ${loc.type}">${loc.type === 'airport' ? '&#9992;&#65039;' : loc.type === 'station' ? '&#128646;' : '&#127963;&#65039;'}</div>
+        <div class="card-body-info">
+          <div class="card-name">${loc.name}</div>
+          <div class="card-address">${loc.address} · ${loc.dist} from centre</div>
+          <div class="card-meta">
+            <span>${loc.cars} cars</span>
+            <span>${loc.suppliers} suppliers</span>
+          </div>
+          <div class="card-suppliers">${badgesHtml}</div>
+        </div>
+        <div class="card-body-price">
+          <div class="card-price">${loc.price}</div>
+          <div class="card-price-label">per day</div>
+        </div>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-checkbox-zone" onclick="onCheckboxClick(event, '${loc.id}')" aria-label="Select ${loc.name}">
+        <span class="custom-checkbox${isSelected ? ' checked' : ''}" id="cb-${loc.id}"></span>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  updateFooter();
+  renderMap();
+}
+
+// ── Card body click — toggles selection (same as checkbox) ──
+function onCardBodyClick(locId) {
+  if (selected.has(locId)) {
+    selected.delete(locId);
+  } else {
+    selected.add(locId);
+  }
+  render();
+}
+
+// ── Checkbox click ──
+function onCheckboxClick(e, locId) {
+  e.stopPropagation();
+  if (selected.has(locId)) {
+    selected.delete(locId);
+  } else {
+    selected.add(locId);
+  }
+  render();
+}
+
+// ── Select all / Clear all ──
+function selectAll() {
+  allLocations.forEach(l => selected.add(l.id));
+  render();
+}
+function clearAll() {
+  selected.clear();
+  render();
+}
+
+// ── Footer — always visible, CTA adapts ──
+function updateFooter() {
+  const footer = document.getElementById('stickyFooter');
+  const chipsEl = document.getElementById('footerChips');
+  const ctaEl = document.getElementById('footerCta');
+
+  footer.classList.add('visible');
+
+  if (selected.size === 0) {
+    chipsEl.innerHTML = '';
+    ctaEl.textContent = 'Select at least 1 location';
+    ctaEl.disabled = true;
+    ctaEl.style.opacity = '0.5';
+    ctaEl.style.cursor = 'not-allowed';
+    return;
+  }
+
+  ctaEl.disabled = false;
+  ctaEl.style.opacity = '1';
+  ctaEl.style.cursor = 'pointer';
+
+  // Chips
+  chipsEl.innerHTML = '';
+  selected.forEach(id => {
+    const loc = allLocations.find(l => l.id === id);
+    if (!loc) return;
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.innerHTML = `${loc.name}<span class="chip-remove" onclick="removeChip('${id}')">&times;</span>`;
+    chipsEl.appendChild(chip);
+  });
+
+  // Adaptive CTA text
+  if (selected.size === 1) {
+    const loc = allLocations.find(l => l.id === Array.from(selected)[0]);
+    ctaEl.textContent = `Search at ${loc.name} →`;
+  } else {
+    ctaEl.textContent = `Search at ${selected.size} locations →`;
+  }
+}
+
+function removeChip(locId) {
+  selected.delete(locId);
+  render();
+}
+
+// ── Multi-location search ──
+function searchMultiple() {
+  const names = [];
+  selected.forEach(id => {
+    const loc = allLocations.find(l => l.id === id);
+    if (loc) names.push(loc.name);
+  });
+  const totalCars = Array.from(selected).reduce((sum, id) => {
+    const loc = allLocations.find(l => l.id === id);
+    return sum + (loc ? loc.cars : 0);
+  }, 0);
+
+  document.getElementById('resultsTitle').textContent = `Comparing cars across ${selected.size} locations`;
+  document.getElementById('resultsSubtitle').textContent = `${totalCars} cars available at: ${names.join(', ')}`;
+
+  document.getElementById('pickerScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.add('active');
+  document.getElementById('stickyFooter').classList.remove('visible');
+}
+
+// ── Single-location results ──
+function showResults(loc) {
+  document.getElementById('resultsTitle').textContent = `Showing ${loc.cars} cars at ${loc.name}`;
+  document.getElementById('resultsSubtitle').textContent = `${loc.suppliers} suppliers · From ${loc.price}/day · ${loc.dist} from city centre`;
+
+  document.getElementById('pickerScreen').classList.add('hidden');
+  document.getElementById('resultsScreen').classList.add('active');
+  document.getElementById('stickyFooter').classList.remove('visible');
+}
+
+// ── Back to picker ──
+function goBackToPicker() {
+  document.getElementById('resultsScreen').classList.remove('active');
+  document.getElementById('pickerScreen').classList.remove('hidden');
+  render();
+}
+
+
+// ── Map pin click — toggle selection + scroll to card ──
+function onPinClick(locId) {
+  if (selected.has(locId)) {
+    selected.delete(locId);
+  } else {
+    selected.add(locId);
+  }
+  render();
+
+  const card = document.getElementById('card-' + locId);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card.style.transition = 'box-shadow .2s';
+    card.style.boxShadow = '0 0 0 3px #0071c2';
+    setTimeout(() => { card.style.boxShadow = ''; }, 1200);
+  }
+}
+
+// ── Map ──
+function renderMap() {
+  const map = document.getElementById('mapInner');
+  if (!map) return;
+  map.querySelectorAll('.map-pin').forEach(p => p.remove());
+
+  allLocations.forEach(loc => {
+    const pin = document.createElement('div');
+    pin.className = 'map-pin' + (selected.has(loc.id) ? ' selected' : '');
+    pin.style.left = loc.mapX + '%';
+    pin.style.top = loc.mapY + '%';
+    pin.id = 'pin-' + loc.id;
+
+    const shortName = loc.name.replace(' Airport', '').replace(' Station', '');
+    pin.innerHTML = shortName + ' <span class="pin-price">' + loc.price + '</span>';
+    pin.addEventListener('click', () => onPinClick(loc.id));
+    map.appendChild(pin);
+  });
+}
+
+// ── Init ──
+render();
+renderMap();
+</script>
+</body>
+</html>
